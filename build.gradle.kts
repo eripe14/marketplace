@@ -54,6 +54,9 @@ dependencies {
 
     // -- inventory --
     implementation("xyz.xenondevs.invui:invui:1.44")
+
+    // -- discord webhook --
+    implementation("org.asynchttpclient:async-http-client:3.0.1")
 }
 
 bukkit {
