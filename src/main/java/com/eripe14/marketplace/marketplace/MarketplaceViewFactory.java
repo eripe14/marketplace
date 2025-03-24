@@ -1,6 +1,7 @@
 package com.eripe14.marketplace.marketplace;
 
 import com.eripe14.marketplace.config.implementation.PluginConfig;
+import com.eripe14.marketplace.discord.DiscordWebhookService;
 import com.eripe14.marketplace.inventory.item.ItemTransformer;
 import com.eripe14.marketplace.inventory.item.impl.PreviousPageItem;
 import com.eripe14.marketplace.inventory.item.impl.QuitInventoryItem;
@@ -10,6 +11,7 @@ import com.eripe14.marketplace.marketplace.offer.OfferItem;
 import com.eripe14.marketplace.marketplace.offer.OfferService;
 import com.eternalcode.multification.shared.Formatter;
 import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 import xyz.xenondevs.invui.gui.PagedGui;
@@ -25,15 +27,18 @@ public class MarketplaceViewFactory {
 
     private final InventoryQueueService queueService;
     private final OfferService offerService;
+    private final DiscordWebhookService discordWebhookService;
     private final PluginConfig config;
 
     public MarketplaceViewFactory(
             InventoryQueueService queueService,
             OfferService offerService,
+            DiscordWebhookService discordWebhookService,
             PluginConfig config
     ) {
         this.queueService = queueService;
         this.offerService = offerService;
+        this.discordWebhookService = discordWebhookService;
         this.config = config;
     }
 
@@ -71,6 +76,8 @@ public class MarketplaceViewFactory {
                     event -> {
                         event.getWhoClicked().sendMessage("You clicked on an offer!");
                         event.getWhoClicked().sendMessage("TODO: Implement offer click action (buying)");
+
+                        this.discordWebhookService.prepareMessage((Player) event.getWhoClicked(), offer);
                         clickAction.accept(event);
                     }
             );

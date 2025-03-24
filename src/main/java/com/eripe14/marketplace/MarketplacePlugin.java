@@ -3,6 +3,9 @@ package com.eripe14.marketplace;
 import com.eripe14.marketplace.config.ConfigManager;
 import com.eripe14.marketplace.config.implementation.MessageConfig;
 import com.eripe14.marketplace.config.implementation.PluginConfig;
+import com.eripe14.marketplace.discord.DiscordWebhookConfig;
+import com.eripe14.marketplace.discord.DiscordWebhookService;
+import com.eripe14.marketplace.discord.DiscordWebhookSettings;
 import com.eripe14.marketplace.inventory.queue.InventoryQueueController;
 import com.eripe14.marketplace.inventory.queue.InventoryQueueService;
 import com.eripe14.marketplace.marketplace.MarketplaceCommand;
@@ -59,6 +62,10 @@ public class MarketplacePlugin extends JavaPlugin {
 
     private InventoryQueueService inventoryQueueService;
 
+    private DiscordWebhookConfig discordWebhookConfig;
+    private DiscordWebhookSettings discordWebhookSettings;
+    private DiscordWebhookService discordWebhookService;
+
     private MarketplaceViewFactory marketplaceViewFactory;
     private MarketplaceInventory marketplaceInventory;
 
@@ -101,9 +108,14 @@ public class MarketplacePlugin extends JavaPlugin {
 
         this.inventoryQueueService = new InventoryQueueService();
 
+        this.discordWebhookConfig = this.configManager.load(DiscordWebhookConfig.class, this.getDataFolder(), "discord.yml");
+        this.discordWebhookSettings = this.discordWebhookConfig;
+        this.discordWebhookService = new DiscordWebhookService(this.discordWebhookSettings);
+
         this.marketplaceViewFactory = new MarketplaceViewFactory(
                 this.inventoryQueueService,
                 this.offerService,
+                this.discordWebhookService,
                 this.pluginConfig
         );
         this.marketplaceInventory = new MarketplaceInventory(

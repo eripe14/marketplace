@@ -21,10 +21,6 @@ public class OfferService {
         this.offerRepository = offerRepository;
         this.tasker = tasker;
         this.loadAllOffers();
-
-        this.offers.forEach(((uuid, offer) -> {
-            System.out.println("Offer: " + offer);
-        }));
     }
 
     public Offer create(UUID sellerUuid, ItemStack itemStack, double price) {
@@ -49,13 +45,9 @@ public class OfferService {
     private void loadAllOffers() {
         this.tasker.newChain()
                 .async(() -> {
-                    System.out.println("===========");
                     for (Offer offer : this.offerRepository.findAll()) {
-                        System.out.println("size: " + this.offers.size());
                         this.offers.put(offer.getUniqueId(), offer);
-                        System.out.println("size: " + this.offers.size());
                     }
-                    System.out.println("===========");
                 })
                 .execute();
     }

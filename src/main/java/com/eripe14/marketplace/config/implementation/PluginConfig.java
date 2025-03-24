@@ -1,5 +1,6 @@
 package com.eripe14.marketplace.config.implementation;
 
+import com.eripe14.marketplace.discord.DiscordWebhookConfig;
 import com.eripe14.marketplace.inventory.item.InventoryItem;
 import eu.okaeri.configs.OkaeriConfig;
 import eu.okaeri.configs.annotation.Comment;
@@ -25,6 +26,9 @@ public class PluginConfig extends OkaeriConfig {
 
         public String password = "Karol123";
     }
+
+    @Comment("Discord webhook settings")
+    public DiscordWebhookConfig discordWebhook = new DiscordWebhookConfig();
 
     public static class MarketPlaceInventoryConfig extends OkaeriConfig {
         public String title = "&eMarketplace";
