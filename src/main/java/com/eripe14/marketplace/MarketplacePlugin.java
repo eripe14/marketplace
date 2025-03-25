@@ -6,6 +6,7 @@ import com.eripe14.marketplace.config.implementation.PluginConfig;
 import com.eripe14.marketplace.discord.DiscordWebhookConfig;
 import com.eripe14.marketplace.discord.DiscordWebhookService;
 import com.eripe14.marketplace.discord.DiscordWebhookSettings;
+import com.eripe14.marketplace.inventory.ConfirmInventory;
 import com.eripe14.marketplace.inventory.queue.InventoryQueueController;
 import com.eripe14.marketplace.inventory.queue.InventoryQueueService;
 import com.eripe14.marketplace.marketplace.MarketplaceCommand;
@@ -19,6 +20,9 @@ import com.eripe14.marketplace.notice.adventure.LegacyColorProcessor;
 import com.eripe14.marketplace.persistance.DatabaseManager;
 import com.eripe14.marketplace.scheduler.BukkitSchedulerImpl;
 import com.eripe14.marketplace.scheduler.Scheduler;
+import com.eripe14.marketplace.transaction.TransactionCommand;
+import com.eripe14.marketplace.transaction.TransactionRepository;
+import com.eripe14.marketplace.transaction.TransactionService;
 import com.eripe14.marketplace.user.UserController;
 import com.eripe14.marketplace.user.UserRepository;
 import dev.rollczi.litecommands.LiteCommands;
@@ -34,6 +38,7 @@ import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Server;
 import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.checkerframework.checker.units.qual.C;
 import xyz.xenondevs.invui.InvUI;
 
 import java.io.IOException;
@@ -60,11 +65,16 @@ public class MarketplacePlugin extends JavaPlugin {
     private OfferRepository offerRepository;
     private OfferService offerService;
 
+    private TransactionRepository transactionRepository;
+    private TransactionService transactionService;
+
     private InventoryQueueService inventoryQueueService;
 
     private DiscordWebhookConfig discordWebhookConfig;
     private DiscordWebhookSettings discordWebhookSettings;
     private DiscordWebhookService discordWebhookService;
+
+    private ConfirmInventory confirmInventory;
 
     private MarketplaceViewFactory marketplaceViewFactory;
     private MarketplaceInventory marketplaceInventory;
@@ -106,17 +116,28 @@ public class MarketplacePlugin extends JavaPlugin {
                 .newProxy(this.documentPersistence, offerCollection, this.getClass().getClassLoader());
         this.offerService = new OfferService(this.offerRepository, this.tasker);
 
+        PersistenceCollection transactionCollection = PersistenceCollection.of(TransactionRepository.class);
+        this.documentPersistence.registerCollection(transactionCollection);
+        this.transactionRepository = RepositoryDeclaration.of(TransactionRepository.class)
+                .newProxy(this.documentPersistence, transactionCollection, this.getClass().getClassLoader());
+        this.transactionService = new TransactionService(this.transactionRepository);
+
         this.inventoryQueueService = new InventoryQueueService();
 
         this.discordWebhookConfig = this.configManager.load(DiscordWebhookConfig.class, this.getDataFolder(), "discord.yml");
         this.discordWebhookSettings = this.discordWebhookConfig;
         this.discordWebhookService = new DiscordWebhookService(this.discordWebhookSettings);
 
+        this.confirmInventory = new ConfirmInventory(this.scheduler, this.pluginConfig.confirmInventoryConfig);
+
         this.marketplaceViewFactory = new MarketplaceViewFactory(
+                this.confirmInventory,
                 this.inventoryQueueService,
                 this.offerService,
+                this.transactionService,
                 this.discordWebhookService,
-                this.pluginConfig
+                this.pluginConfig,
+                this.noticeService
         );
         this.marketplaceInventory = new MarketplaceInventory(
                 this.inventoryQueueService,
@@ -132,7 +153,8 @@ public class MarketplacePlugin extends JavaPlugin {
         this.liteCommands = LiteBukkitFactory.builder("marketplace", this)
                 .commands(
                         new OfferCommand(this.offerService, this.noticeService),
-                        new MarketplaceCommand(this.marketplaceInventory)
+                        new MarketplaceCommand(this.marketplaceInventory),
+                        new TransactionCommand(this.transactionService, this.noticeService, this.pluginConfig)
                 )
                 .build();
     }

@@ -45,6 +45,14 @@ public final class ItemTransformer {
                 .get();
     }
 
+    public static ItemStack build(InventoryItem inventoryItem, Material additionalMaterial) {
+        return build(inventoryItem, additionalMaterial, EMPTY_FORMATTER);
+    }
+
+    public static ItemStack build(InventoryItem inventoryItem) {
+        return build(inventoryItem, Material.AIR, EMPTY_FORMATTER);
+    }
+
     public static Item transform(InventoryItem inventoryItem, Material additionalMaterial, Formatter formatter) {
         ItemStack itemStack = build(inventoryItem, additionalMaterial, formatter);
         return new SimpleItem(itemStack);

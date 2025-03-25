@@ -53,8 +53,6 @@ public class MarketplaceInventory {
     }
 
     private PagedGui prepareGui() {
-        System.out.println("size: " + this.getContent().size());
-
         return this.viewFactory.getOffersView()
                 .setContent(this.getContent())
                 .build();

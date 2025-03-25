@@ -17,6 +17,9 @@ public class PluginConfig extends OkaeriConfig {
     @Comment("Configuration for the marketplace inventory")
     public MarketPlaceInventoryConfig marketPlaceInventory = new MarketPlaceInventoryConfig();
 
+    @Comment("Configuration for the confirm inventory")
+    public ConfirmInventoryConfig confirmInventoryConfig = new ConfirmInventoryConfig();
+
     public static class StorageConfig extends OkaeriConfig {
         public String prefix = "mp";
 
@@ -122,6 +125,64 @@ public class PluginConfig extends OkaeriConfig {
                 List.of(ItemFlag.HIDE_ATTRIBUTES)
         );
 
+        @Comment("Time format")
+        public String timeFormat = "dd/MM/yyyy HH:mm:ss";
+    }
+
+    public static class ConfirmInventoryConfig extends OkaeriConfig {
+        @Comment("Title of the inventory")
+        public String title = "&eConfirm buy";
+
+        @Comment("Rows of the inventory")
+        public int rows = 1;
+
+        @Comment("Fill empty slots")
+        public boolean fillEmptySlots = true;
+
+        @Comment("Filler item")
+        @Comment("Slot will not be taken into account")
+        public InventoryItem fillerItem = new InventoryItem(
+                0,
+                0,
+                Material.GRAY_STAINED_GLASS_PANE,
+                "",
+                List.of(),
+                List.of(ItemFlag.HIDE_ATTRIBUTES)
+        );
+
+        @Comment("Confirm item")
+        public InventoryItem confirmItem = new InventoryItem(
+                0,
+                5,
+                Material.GREEN_STAINED_GLASS_PANE,
+                "&aConfirm",
+                List.of(),
+                List.of(ItemFlag.HIDE_ATTRIBUTES)
+        );
+
+        @Comment("Cancel item")
+        public InventoryItem cancelItem = new InventoryItem(
+                0,
+                3,
+                Material.RED_STAINED_GLASS_PANE,
+                "&cCancel",
+                List.of(),
+                List.of(ItemFlag.HIDE_ATTRIBUTES)
+        );
+
+        @Comment("Additional info item")
+        @Comment("Material of item will be replaced with the item from the offer")
+        public InventoryItem additionalItem = new InventoryItem(
+                0,
+                4,
+                Material.PAPER,
+                "&eConfirm buy",
+                List.of(
+                        "&7Price: &e{price}",
+                        "&7Seller: &e{seller}"
+                ),
+                List.of(ItemFlag.HIDE_ATTRIBUTES)
+        );
     }
 
 }

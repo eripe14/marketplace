@@ -38,6 +38,11 @@ public class OfferService {
         return offer;
     }
 
+    public void remove(Offer offer) {
+        this.offers.remove(offer.getUniqueId());
+        this.offerRepository.deleteByPath(offer.getUniqueId());
+    }
+
     public Collection<Offer> getOffers() {
         return Collections.unmodifiableCollection(this.offers.values());
     }

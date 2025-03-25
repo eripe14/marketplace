@@ -41,14 +41,4 @@ public class DatabaseManager {
         );
     }
 
-    public <T extends DocumentRepository> T registerRepository(
-            Class<T> clazz,
-            DocumentPersistence persistence
-    ) {
-        PersistenceCollection collection = PersistenceCollection.of(clazz);
-        persistence.registerCollection(collection);
-
-        return RepositoryDeclaration.of(clazz).newProxy(persistence, collection, this.plugin.getClass().getClassLoader());
-    }
-
 }

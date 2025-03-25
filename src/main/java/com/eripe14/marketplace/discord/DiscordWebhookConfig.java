@@ -6,7 +6,7 @@ import eu.okaeri.configs.annotation.Comment;
 public class DiscordWebhookConfig extends OkaeriConfig implements DiscordWebhookSettings {
 
     @Comment("Webhook URL")
-    private String webhookUrl = "https://discord.com/api/webhooks/1353635834385137734/sv-mQs4QYZnGpLKvYvcTEgEwuWdJqddCxQAoZh2khdrMRXWAWsrMGi7VNriR99BrLmXg";
+    private String webhookUrl = "";
 
     @Comment("Webhook username")
     private String webhookUsername = "Marketplace";

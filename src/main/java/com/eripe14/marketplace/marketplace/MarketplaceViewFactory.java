@@ -2,6 +2,7 @@ package com.eripe14.marketplace.marketplace;
 
 import com.eripe14.marketplace.config.implementation.PluginConfig;
 import com.eripe14.marketplace.discord.DiscordWebhookService;
+import com.eripe14.marketplace.inventory.ConfirmInventory;
 import com.eripe14.marketplace.inventory.item.ItemTransformer;
 import com.eripe14.marketplace.inventory.item.impl.PreviousPageItem;
 import com.eripe14.marketplace.inventory.item.impl.QuitInventoryItem;
@@ -9,6 +10,9 @@ import com.eripe14.marketplace.inventory.queue.InventoryQueueService;
 import com.eripe14.marketplace.marketplace.offer.Offer;
 import com.eripe14.marketplace.marketplace.offer.OfferItem;
 import com.eripe14.marketplace.marketplace.offer.OfferService;
+import com.eripe14.marketplace.notice.NoticeService;
+import com.eripe14.marketplace.transaction.TransactionService;
+import com.eripe14.marketplace.transaction.TransactionSource;
 import com.eternalcode.multification.shared.Formatter;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -25,21 +29,30 @@ import java.util.function.Consumer;
 
 public class MarketplaceViewFactory {
 
+    private final ConfirmInventory confirmInventory;
     private final InventoryQueueService queueService;
     private final OfferService offerService;
+    private final TransactionService transactionService;
     private final DiscordWebhookService discordWebhookService;
     private final PluginConfig config;
+    private final NoticeService noticeService;
 
     public MarketplaceViewFactory(
+            ConfirmInventory confirmInventory,
             InventoryQueueService queueService,
             OfferService offerService,
+            TransactionService transactionService,
             DiscordWebhookService discordWebhookService,
-            PluginConfig config
+            PluginConfig config,
+            NoticeService noticeService
     ) {
+        this.confirmInventory = confirmInventory;
         this.queueService = queueService;
         this.offerService = offerService;
+        this.transactionService = transactionService;
         this.discordWebhookService = discordWebhookService;
         this.config = config;
+        this.noticeService = noticeService;
     }
 
     public PagedGui.Builder<Item> getOffersView() {
@@ -68,17 +81,23 @@ public class MarketplaceViewFactory {
             Formatter formatter = new Formatter();
             formatter.register("{price}", offer.getPrice());
             formatter.register("{seller}", Bukkit.getOfflinePlayer(offer.getSellerUuid()).getName());
+            formatter.register("{item}", itemStack.getType().name().toLowerCase().replace("_", " "));
 
             OfferItem offerItem = new OfferItem(
                     this.config.marketPlaceInventory.offerItem,
                     itemStack.getType(),
                     formatter,
                     event -> {
-                        event.getWhoClicked().sendMessage("You clicked on an offer!");
-                        event.getWhoClicked().sendMessage("TODO: Implement offer click action (buying)");
-
-                        this.discordWebhookService.prepareMessage((Player) event.getWhoClicked(), offer);
+                        Player player = (Player) event.getWhoClicked();
                         clickAction.accept(event);
+
+                        this.confirmInventory.openInventory(
+                                player,
+                                offer,
+                                offer.getPrice(),
+                                this.confirmAction(player, offer, formatter),
+                                player::closeInventory
+                        );
                     }
             );
 
@@ -86,6 +105,39 @@ public class MarketplaceViewFactory {
         }
 
         return items;
+    }
+
+    private Runnable confirmAction(Player player, Offer offer, Formatter formatter) {
+        return () -> {
+            formatter.register("{buyer}", player.getName());
+            player.closeInventory();
+
+            this.giveItemToPlayer(player, offer);
+            this.discordWebhookService.prepareMessage(player, offer);
+            this.offerService.remove(offer);
+            this.transactionService.createTransaction(player, TransactionSource.MARKETPLACE, offer, offer.getPrice());
+
+            this.noticeService.create()
+                    .notice(messages -> messages.boughtItem)
+                    .player(player.getUniqueId())
+                    .formatter(formatter)
+                    .sendAsync();
+
+            this.noticeService.create()
+                    .notice(messages -> messages.soldItem)
+                    .player(offer.getSellerUuid())
+                    .formatter(formatter)
+                    .sendAsync();
+        };
+    }
+
+    private void giveItemToPlayer(Player player, Offer offer) {
+        if (player.getInventory().firstEmpty() == -1) {
+            player.getWorld().dropItem(player.getLocation(), offer.getItem());
+            return;
+        }
+
+        player.getInventory().addItem(offer.getItem());
     }
 
 }
