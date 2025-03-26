@@ -3,6 +3,7 @@ package com.eripe14.marketplace.marketplace.blackmarket;
 import dev.rollczi.litecommands.annotations.command.Command;
 import dev.rollczi.litecommands.annotations.context.Context;
 import dev.rollczi.litecommands.annotations.execute.Execute;
+import dev.rollczi.litecommands.annotations.permission.Permission;
 import org.bukkit.entity.Player;
 
 @Command(name = "black-market")
@@ -15,6 +16,7 @@ public class BlackMarketCommand {
     }
 
     @Execute
+    @Permission("marketplace.blackmarket")
     void execute(@Context Player player) {
         this.blackMarketInventory.openInventory(player);
     }
