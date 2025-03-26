@@ -1,11 +1,10 @@
-package com.eripe14.marketplace.marketplace;
+package com.eripe14.marketplace.marketplace.blackmarket;
 
 import com.eripe14.marketplace.config.implementation.PluginConfig;
 import com.eripe14.marketplace.inventory.queue.InventoryQueueService;
+import com.eripe14.marketplace.marketplace.MarketplaceViewFactory;
 import com.eripe14.marketplace.notice.adventure.LegacyColorProcessor;
-import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
-import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import xyz.xenondevs.inventoryaccess.component.AdventureComponentWrapper;
 import xyz.xenondevs.invui.gui.PagedGui;
@@ -14,7 +13,7 @@ import xyz.xenondevs.invui.window.Window;
 
 import java.util.List;
 
-public class MarketplaceInventory {
+public class BlackMarketInventory {
 
     private final MiniMessage miniMessage = MiniMessage.builder()
             .postProcessor(new LegacyColorProcessor())
@@ -25,7 +24,7 @@ public class MarketplaceInventory {
     private final PluginConfig pluginConfig;
     private final PagedGui pagedGui;
 
-    public MarketplaceInventory(
+    public BlackMarketInventory(
             InventoryQueueService inventoryQueueService,
             MarketplaceViewFactory viewFactory,
             PluginConfig pluginConfig
@@ -42,7 +41,7 @@ public class MarketplaceInventory {
 
         Window window = Window.single()
                 .setViewer(player)
-                .setTitle(new AdventureComponentWrapper(this.miniMessage.deserialize(this.pluginConfig.marketPlaceConfig.title)))
+                .setTitle(new AdventureComponentWrapper(this.miniMessage.deserialize(this.pluginConfig.marketPlaceConfig.blackMarketTitle)))
                 .setGui(this.pagedGui)
                 .build();
 
@@ -61,6 +60,7 @@ public class MarketplaceInventory {
     }
 
     private List<Item> getContent() {
-        return this.viewFactory.getGuiContent(false, event -> this.refreshGui());
+        return this.viewFactory.getGuiContent(true, event -> this.refreshGui());
     }
+
 }

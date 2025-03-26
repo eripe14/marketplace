@@ -7,6 +7,8 @@ import eu.okaeri.configs.annotation.Comment;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemFlag;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.List;
 
 public class PluginConfig extends OkaeriConfig {
@@ -15,7 +17,7 @@ public class PluginConfig extends OkaeriConfig {
     public StorageConfig storage = new StorageConfig();
 
     @Comment("Configuration for the marketplace inventory")
-    public MarketPlaceInventoryConfig marketPlaceInventory = new MarketPlaceInventoryConfig();
+    public MarketPlaceConfig marketPlaceConfig = new MarketPlaceConfig();
 
     @Comment("Configuration for the confirm inventory")
     public ConfirmInventoryConfig confirmInventoryConfig = new ConfirmInventoryConfig();
@@ -33,8 +35,9 @@ public class PluginConfig extends OkaeriConfig {
     @Comment("Discord webhook settings")
     public DiscordWebhookConfig discordWebhook = new DiscordWebhookConfig();
 
-    public static class MarketPlaceInventoryConfig extends OkaeriConfig {
-        public String title = "&eMarketplace";
+    public static class MarketPlaceConfig extends OkaeriConfig {
+        public String title = "&e&lMarketplace";
+        public String blackMarketTitle = "&c&lBlack market";
 
         public int rows = 6;
 
@@ -44,14 +47,13 @@ public class PluginConfig extends OkaeriConfig {
         @Comment("P - previous page")
         @Comment("N - next page")
         @Comment("Q - close")
-        @Comment("S - settings (profile)")
         public List<String> structure = List.of(
                 "OOOOOOOOO",
                 "OOOOOOOOO",
                 "OOOOOOOOO",
                 "OOOOOOOOO",
                 "OOOOOOOOO",
-                "XXXPQNXXS"
+                "XXXPQNXXX"
         );
 
         @Comment("Declare items icons for the structure")
@@ -101,16 +103,6 @@ public class PluginConfig extends OkaeriConfig {
                 List.of(ItemFlag.HIDE_ATTRIBUTES)
         );
 
-        @Comment("Declare how settings item should look like?")
-        public InventoryItem settingsItem = new InventoryItem(
-                0,
-                0,
-                Material.CLOCK,
-                "&eSettings",
-                List.of(),
-                List.of(ItemFlag.HIDE_ATTRIBUTES)
-        );
-
         @Comment("Declare how offer should look like")
         @Comment("Material of item will be replaced with the item from the offer")
         public InventoryItem offerItem = new InventoryItem(
@@ -127,6 +119,15 @@ public class PluginConfig extends OkaeriConfig {
 
         @Comment("Time format")
         public String timeFormat = "dd/MM/yyyy HH:mm:ss";
+
+        @Comment("Percentage of offers that will go to the black market")
+        public double blackMarketPercentage = 50.0;
+
+        @Comment("How often black market should be shuffled")
+        public Duration blackMarketShuffleDuration = Duration.ofMinutes(2);
+
+        @Comment("Should players get notification when black market got shuffled?")
+        public boolean blackMarketShuffleNotification = true;
     }
 
     public static class ConfirmInventoryConfig extends OkaeriConfig {

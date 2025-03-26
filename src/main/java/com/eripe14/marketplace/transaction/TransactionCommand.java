@@ -75,7 +75,7 @@ public class TransactionCommand {
 
     private String formatInstant(Instant instant) {
         ZonedDateTime zonedDateTime = instant.atZone(ZoneId.systemDefault());
-        return DateTimeFormatter.ofPattern(this.pluginConfig.marketPlaceInventory.timeFormat).format(zonedDateTime);
+        return DateTimeFormatter.ofPattern(this.pluginConfig.marketPlaceConfig.timeFormat).format(zonedDateTime);
     }
 
 }

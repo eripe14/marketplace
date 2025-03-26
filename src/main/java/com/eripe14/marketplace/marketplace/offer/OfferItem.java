@@ -7,6 +7,7 @@ import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import xyz.xenondevs.invui.item.ItemProvider;
 import xyz.xenondevs.invui.item.impl.AbstractItem;
@@ -16,25 +17,30 @@ import java.util.function.Consumer;
 public class OfferItem extends AbstractItem {
 
     private final InventoryItem inventoryItem;
-    private final Material material;
+    private final Offer offer;
     private final Formatter formatter;
     private final Consumer<InventoryClickEvent> clickAction;
 
     public OfferItem(
             InventoryItem inventoryItem,
-            Material material,
+            Offer offer,
             Formatter formatter,
             Consumer<InventoryClickEvent> clickAction
     ) {
         this.inventoryItem = inventoryItem;
-        this.material = material;
+        this.offer = offer;
         this.formatter = formatter;
         this.clickAction = clickAction;
     }
 
     @Override
     public ItemProvider getItemProvider() {
-        return ItemTransformer.transformToItemBuilder(this.inventoryItem, this.material,  this.formatter);
+        ItemStack item = this.offer.getItem();
+        return ItemTransformer.transformToItemBuilder(
+                this.inventoryItem,
+                item.getType(),
+                this.formatter
+        ).setAmount(item.getAmount());
     }
 
     @Override

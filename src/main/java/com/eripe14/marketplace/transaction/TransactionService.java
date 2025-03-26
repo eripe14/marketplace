@@ -4,10 +4,8 @@ import com.eripe14.marketplace.marketplace.offer.Offer;
 import org.bukkit.entity.Player;
 
 import java.time.Instant;
-import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
 
 public class TransactionService {
 

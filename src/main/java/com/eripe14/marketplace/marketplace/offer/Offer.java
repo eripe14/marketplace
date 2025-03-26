@@ -22,8 +22,8 @@ public class Offer extends Document {
     @CustomKey("price")
     private double price;
 
-    @CustomKey("sold")
-    private boolean sold;
+    @CustomKey("black-market")
+    private boolean blackMarket;
 
     @CustomKey("created-at")
     private Instant createdAt;

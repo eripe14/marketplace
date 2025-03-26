@@ -28,9 +28,9 @@ public class OfferService {
 
         offer.setItem(itemStack.clone());
         offer.setPrice(price);
-        offer.setSold(false);
         offer.setCreatedAt(Instant.now());
         offer.setSellerUuid(sellerUuid);
+        offer.setBlackMarket(false);
 
         this.offers.put(offer.getUniqueId(), offer);
         offer.save();

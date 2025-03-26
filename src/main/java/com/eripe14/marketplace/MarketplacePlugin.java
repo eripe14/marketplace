@@ -1,17 +1,24 @@
 package com.eripe14.marketplace;
 
+import com.eripe14.marketplace.command.InvalidUsageHandler;
+import com.eripe14.marketplace.command.MissingPermissionsHandler;
 import com.eripe14.marketplace.config.ConfigManager;
 import com.eripe14.marketplace.config.implementation.MessageConfig;
 import com.eripe14.marketplace.config.implementation.PluginConfig;
 import com.eripe14.marketplace.discord.DiscordWebhookConfig;
 import com.eripe14.marketplace.discord.DiscordWebhookService;
 import com.eripe14.marketplace.discord.DiscordWebhookSettings;
+import com.eripe14.marketplace.economy.EconomyService;
+import com.eripe14.marketplace.economy.VaultHook;
 import com.eripe14.marketplace.inventory.ConfirmInventory;
 import com.eripe14.marketplace.inventory.queue.InventoryQueueController;
 import com.eripe14.marketplace.inventory.queue.InventoryQueueService;
 import com.eripe14.marketplace.marketplace.MarketplaceCommand;
 import com.eripe14.marketplace.marketplace.MarketplaceInventory;
 import com.eripe14.marketplace.marketplace.MarketplaceViewFactory;
+import com.eripe14.marketplace.marketplace.blackmarket.BlackMarketCommand;
+import com.eripe14.marketplace.marketplace.blackmarket.BlackMarketInventory;
+import com.eripe14.marketplace.marketplace.blackmarket.BlackMarketService;
 import com.eripe14.marketplace.marketplace.offer.OfferRepository;
 import com.eripe14.marketplace.marketplace.offer.OfferService;
 import com.eripe14.marketplace.marketplace.offer.OfferCommand;
@@ -27,6 +34,7 @@ import com.eripe14.marketplace.user.UserController;
 import com.eripe14.marketplace.user.UserRepository;
 import dev.rollczi.litecommands.LiteCommands;
 import dev.rollczi.litecommands.bukkit.LiteBukkitFactory;
+import dev.rollczi.litecommands.bukkit.LiteBukkitMessages;
 import eu.okaeri.persistence.PersistenceCollection;
 import eu.okaeri.persistence.document.DocumentPersistence;
 import eu.okaeri.persistence.repository.RepositoryDeclaration;
@@ -35,6 +43,7 @@ import eu.okaeri.tasker.core.Tasker;
 import net.kyori.adventure.platform.AudienceProvider;
 import net.kyori.adventure.platform.bukkit.BukkitAudiences;
 import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Server;
 import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -60,10 +69,16 @@ public class MarketplacePlugin extends JavaPlugin {
     private DatabaseManager databaseManager;
     private DocumentPersistence documentPersistence;
 
+    private VaultHook vaultHook;
+    private Economy economy;
+    private EconomyService economyService;
+
     private UserRepository userRepository;
 
     private OfferRepository offerRepository;
     private OfferService offerService;
+
+    private BlackMarketService blackMarketService;
 
     private TransactionRepository transactionRepository;
     private TransactionService transactionService;
@@ -78,6 +93,8 @@ public class MarketplacePlugin extends JavaPlugin {
 
     private MarketplaceViewFactory marketplaceViewFactory;
     private MarketplaceInventory marketplaceInventory;
+
+    private BlackMarketInventory blackMarketInventory;
 
     private LiteCommands<CommandSender> liteCommands;
 
@@ -105,6 +122,10 @@ public class MarketplacePlugin extends JavaPlugin {
         this.databaseManager = new DatabaseManager(this, this.pluginConfig);
         this.documentPersistence = this.databaseManager.connect();
 
+        this.vaultHook = new VaultHook(server);
+        this.economy = this.vaultHook.getEconomy();
+        this.economyService = new EconomyService(this.economy);
+
         PersistenceCollection userCollection = PersistenceCollection.of(UserRepository.class);
         this.documentPersistence.registerCollection(userCollection);
         this.userRepository = RepositoryDeclaration.of(UserRepository.class)
@@ -115,6 +136,8 @@ public class MarketplacePlugin extends JavaPlugin {
         this.offerRepository = RepositoryDeclaration.of(OfferRepository.class)
                 .newProxy(this.documentPersistence, offerCollection, this.getClass().getClassLoader());
         this.offerService = new OfferService(this.offerRepository, this.tasker);
+
+        this.blackMarketService = new BlackMarketService(this.scheduler, this.noticeService, this.offerService, this.pluginConfig);
 
         PersistenceCollection transactionCollection = PersistenceCollection.of(TransactionRepository.class);
         this.documentPersistence.registerCollection(transactionCollection);
@@ -136,10 +159,17 @@ public class MarketplacePlugin extends JavaPlugin {
                 this.offerService,
                 this.transactionService,
                 this.discordWebhookService,
+                this.economyService,
                 this.pluginConfig,
                 this.noticeService
         );
         this.marketplaceInventory = new MarketplaceInventory(
+                this.inventoryQueueService,
+                this.marketplaceViewFactory,
+                this.pluginConfig
+        );
+
+        this.blackMarketInventory = new BlackMarketInventory(
                 this.inventoryQueueService,
                 this.marketplaceViewFactory,
                 this.pluginConfig
@@ -151,10 +181,16 @@ public class MarketplacePlugin extends JavaPlugin {
 
     private void registerCommands() {
         this.liteCommands = LiteBukkitFactory.builder("marketplace", this)
+                .settings(settings -> settings.fallbackPrefix("[Marketplace]").nativePermissions(false))
+                .message(LiteBukkitMessages.PLAYER_NOT_FOUND, this.messageConfig.cantFindPlayer)
+                .message(LiteBukkitMessages.PLAYER_ONLY, input -> this.messageConfig.onlyForPlayer)
+                .missingPermission(new MissingPermissionsHandler(this.noticeService))
+                .invalidUsage(new InvalidUsageHandler(this.noticeService))
                 .commands(
                         new OfferCommand(this.offerService, this.noticeService),
-                        new MarketplaceCommand(this.marketplaceInventory),
-                        new TransactionCommand(this.transactionService, this.noticeService, this.pluginConfig)
+                        new MarketplaceCommand(this, this.marketplaceInventory),
+                        new TransactionCommand(this.transactionService, this.noticeService, this.pluginConfig),
+                        new BlackMarketCommand(this.blackMarketInventory)
                 )
                 .build();
     }

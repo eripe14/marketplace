@@ -17,6 +17,7 @@ repositories {
     maven("https://repo.eternalcode.pl/releases")
     maven("https://repo.panda-lang.org/releases")
     maven("https://repo.xenondevs.xyz/releases")
+    maven("https://jitpack.io")
 }
 
 dependencies {
@@ -58,6 +59,9 @@ dependencies {
 
     // -- discord webhook --
     implementation("org.asynchttpclient:async-http-client:3.0.1")
+
+    // -- economy --
+    compileOnly("com.github.MilkBowl:VaultAPI:1.7.1")
 }
 
 bukkit {
@@ -67,6 +71,7 @@ bukkit {
     name = "MarketplacePlugin"
     author = "eripe14"
     version = "${project.version}"
+    depend = listOf("Vault")
 }
 
 tasks.withType<JavaCompile> {
